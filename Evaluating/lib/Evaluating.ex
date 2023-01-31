@@ -1,4 +1,4 @@
-defmodule Interpreter do
+defmodule Evaluating do
 
   @type expr() ::
   {:add, expr(), expr()}
@@ -8,9 +8,19 @@ defmodule Interpreter do
 | literal()
 
 
-@type literal() :: {:num, number()}
+@type literal() ::
+  {:num, number()}
   | {:var, atom()}
   | {:q, number(), number()}
+
+
+  def test  do
+    env = %{a: 1, b: 2, c: 3, d: 4}
+    expr = {:mul, {:div, {:num, 3}, {:num,4 }}, {:num, 4}}
+    expr1 = {:mul, {:q, 5, 2}, {:q, 4, 3}}
+
+    eval(expr, env)
+  end
 
 
 def eval({:num, k}, _) do k end
@@ -19,34 +29,41 @@ def eval({:add, x1, x2}, getVar) do add(eval(x1, getVar), eval(x2, getVar)) end
 def eval({:sub, x1, x2}, getVar) do sub(eval(x1, getVar), eval(x2, getVar)) end
 def eval({:mul, x1, x2}, getVar) do mul(eval(x1, getVar), eval(x2, getVar)) end
 def eval({:div, x1, x2}, getVar) do div(eval(x1, getVar), eval(x2, getVar)) end
+def eval(_, {:q, x1, x2}) do simp(x1, x2) end
 
 
-def add({:q, a, b}, x) do {:q, a * x + b, b } end
-def add(x, {:q, a, b}) do {:q, x * b + a, b } end
+def add({:q, a, b}, {:num, x}) do {:q, x * b + a, b } end
+def add({:num, x}, {:q, a, b}) do {:q, x * b + a, b } end
 def add({:q, a, b}, {:q, z, k}) do {:q, a * k + b * z, b * k} end
-def add(x, y) do x + y end
+def add({:num, x}, {:num, y}) do {:num, x + y} end
 
 
-def sub({:q, a, b}, x) do {:q, a * x - b, b } end
-def sub(x, {:q, a, b}) do {:q, x * b - a, b } end
+def sub({:q, a, b}, {:num, x}) do {:q, b * x - a, b } end
+def sub({:num, x}, {:q, a, b}) do {:q, x * b - a, b } end
 def sub({:q, a, b}, {:q, z, k}) do {:q, a * k - b * z, b * k} end
-def sub(x, y) do x - y end
+def sub({:num, x}, {:num, y}) do {:num, x - y} end
 
 
-def mul({:q, a, b}, x) do {:q, a * x, b } end
-def mul(x, {:q, a, b}) do {:q, x * a, b } end
+def mul({:q, a, b}, {:num, x}) do {:q, a * x, b } end
+def mul({:num, x}, {:q, a, b}) do {:q, x * a, b } end
 def mul({:q, a, b}, {:q, z, k}) do {:q, a * z, b * k} end
-def mul(x, y) do x * y end
+def mul({:num, x},{:num, y}) do {:num, x * y} end
 
 
 def divi(x, {:q, a, b}) do {:q, a, x * b } end
 def divi({:q, a, b}, {:q, z, k}) do {:q, a * k, b * z} end
 def divi({:q, a, b}, x) do {:q, a, x * b } end
-def divi(x, y) do
-  if(is_float(x/y)) do
-
+def divi({:num, x}, {:num, y}) do
+  if(rem(x,y) == 0) do
+    {:num, trunc(x/y)}
   else
-    x/y
+    simp(x,y)
 
- end
+end
+end
+
+def simp(x1, x2) do
+  {:q, trunc(x1/Integer.gcd(x1,x2)), trunc(x2/Integer.gcd(x1,x2))}
+
+end
 end
