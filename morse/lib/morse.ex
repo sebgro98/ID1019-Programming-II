@@ -33,18 +33,18 @@ defmodule Morse do
     [{num, acc}] ++ tables(left, '-' ++ acc) ++ tables(right, '.' ++ acc)
   end
 
-  def decode([], char, _)  do
-    '#{[char]}'
+  def decode([], _, _, acc)  do
+    '#{Enum.reverse(acc)}'
   end
 
-  def decode([45| seq], {_, _, left, _}, tree) do
-    decode(seq, left, tree)
+  def decode([45| seq], {_, _, left, _}, tree, acc) do
+    decode(seq, left, tree, acc)
   end
-  def decode([46| seq], {_, _, _, right}, tree) do
-    decode(seq, right, tree)
+  def decode([46| seq], {_, _, _, right}, tree, acc) do
+    decode(seq, right, tree, acc)
   end
-  def decode([32| seq], {_, char, _, _}, tree) do
-    [char | decode(seq, tree, tree)]
+  def decode([32| seq], {_, char, _, _}, tree, acc) do
+    decode(seq, tree, tree, [char|acc])
   end
 
   def decode_table() do
