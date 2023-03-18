@@ -7,11 +7,20 @@ defmodule Morse do
     ".... - - .--. ... ---... .----- .----- .-- .-- .-- .-.-.- -.-- --- ..- - ..- -... . .-.-.- -.-. --- -- .----- .-- .- - -.-. .... ..--.. ...- .----. -.. .--.-- ..... .---- .-- ....- .-- ----. .--.-- ..... --... --. .--.-- ..... ---.. -.-. .--.-- ..... .---- "
   end
 
-  def encode([], _), do: []
+  def encode(data, table) do
+    encode_tail(data, table, [])
+  end
 
-  def encode([char | rest], table) do
-    {_, code} = List.keyfind(table, char, 0)
-    '#{code} ' ++ encode(rest, table)
+  def encode_tail([], _, acc), do: '#{Enum.reverse(acc)}'
+
+  def encode_tail([char | rest], table, acc) do
+    code = Map.get(table, char, nil)
+    case code do
+      nil ->
+        encode_tail(rest, table, acc)
+      _ ->
+        encode_tail(rest, table, [code | acc])
+    end
   end
 
 
